@@ -6,6 +6,7 @@ import VideoSection from './components/VideoSection';
 import Footer from './components/Footer';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import Terms from './pages/Terms';
+import Success from './pages/Success';
 
 const HomePage: React.FC = () => {
   return (
@@ -44,6 +45,7 @@ const App: React.FC = () => {
           <Route path="/" element={<HomePage />} />
           <Route path="/privacy" element={<PrivacyPolicy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/success" element={<Success />} />
         </Routes>
 
         <Footer />
@@ -51,5 +53,3 @@ const App: React.FC = () => {
     </Router>
   );
 };
-
-export default App;

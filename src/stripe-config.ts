@@ -1,17 +1,20 @@
 export const STRIPE_PRODUCTS = {
   MONTHLY_PLAN: {
-    priceId: 'price_1QwmNEF3R6PCXoXV9BUeG3Z8',
-    name: 'Plano Mensal',
-    description: 'Acesso ilimitado a todos os recursos por um mês',
+    priceId: 'price_1RSrfuF3R6PCXoXVZ18WfyDS',
+    productId: 'prod_SNcv9yqXEalR9P',
+    name: 'Plano Mensal NAZE DUB',
+    description: 'Acesso ilimitado a todos os recursos de dublagem',
     mode: 'subscription' as const,
     price: 29.99,
     currency: 'BRL',
     interval: 'month' as const,
     features: [
       'Dublagem ilimitada de vídeos',
-      'Acesso a todas as vozes',
+      'Todas as vozes disponíveis',
       'Suporte prioritário',
-      'Sem compromisso - cancele quando quiser'
+      'Sem compromisso - cancele quando quiser',
+      'Processamento em alta prioridade',
+      'Remoção de ruído avançada'
     ]
   }
 } as const;
