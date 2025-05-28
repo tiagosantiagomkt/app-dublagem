@@ -1,7 +1,6 @@
 import axios from 'axios';
 
-// Ensure we're using the correct protocol based on the environment
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_URL = 'http://localhost:8000';
 
 export interface DubbingRequest {
   url: string;
@@ -20,47 +19,66 @@ export interface DubbingResponse {
 }
 
 export class DubbingService {
+  private axiosInstance;
+
+  constructor() {
+    this.axiosInstance = axios.create({
+      baseURL: API_URL,
+      timeout: 30000,
+      headers: {
+        'Content-Type': 'application/json',
+      }
+    });
+  }
+
   async startDubbing(request: DubbingRequest): Promise<DubbingResponse> {
     try {
-      const response = await axios.post<DubbingResponse>(
-        `${API_URL}/api/dub`,
-        request,
-        {
-          // Add additional headers and configuration for better error handling
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 30000, // 30 second timeout
-        }
+      // Primeiro, verifica se o servidor está online
+      await this.checkServerHealth();
+      
+      const response = await this.axiosInstance.post<DubbingResponse>(
+        '/api/dub',
+        request
       );
       return response.data;
     } catch (error) {
       console.error('Erro ao iniciar dublagem:', error);
-      if (axios.isAxiosError(error) && !error.response) {
-        throw new Error('Erro de conexão com o servidor. Por favor, verifique se o servidor está rodando e tente novamente.');
+      if (axios.isAxiosError(error)) {
+        if (!error.response) {
+          throw new Error('Servidor não está respondendo. Verifique se o servidor backend está rodando em http://localhost:8000');
+        }
+        if (error.response.status === 404) {
+          throw new Error('API de dublagem não encontrada. Verifique se o servidor está configurado corretamente.');
+        }
+        throw new Error(`Erro ao iniciar dublagem: ${error.response.data?.message || error.message}`);
       }
-      throw error;
+      throw new Error('Erro inesperado ao iniciar dublagem');
     }
   }
 
   async checkStatus(taskId: string): Promise<DubbingResponse> {
     try {
-      const response = await axios.get<DubbingResponse>(
-        `${API_URL}/api/dub/${taskId}`,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          timeout: 10000, // 10 second timeout
-        }
+      const response = await this.axiosInstance.get<DubbingResponse>(
+        `/api/dub/${taskId}`
       );
       return response.data;
     } catch (error) {
-      console.error('Erro ao verificar status da dublagem:', error);
-      if (axios.isAxiosError(error) && !error.response) {
-        throw new Error('Erro de conexão com o servidor. Por favor, verifique se o servidor está rodando e tente novamente.');
+      console.error('Erro ao verificar status:', error);
+      if (axios.isAxiosError(error)) {
+        if (!error.response) {
+          throw new Error('Servidor não está respondendo');
+        }
+        throw new Error(`Erro ao verificar status: ${error.response.data?.message || error.message}`);
       }
-      throw error;
+      throw new Error('Erro inesperado ao verificar status');
+    }
+  }
+
+  private async checkServerHealth(): Promise<void> {
+    try {
+      await this.axiosInstance.get('/health', { timeout: 5000 });
+    } catch (error) {
+      throw new Error('Servidor de dublagem não está acessível. Verifique se o servidor backend está rodando.');
     }
   }
 }
