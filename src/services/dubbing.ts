@@ -29,11 +29,26 @@ export class DubbingService {
         'Content-Type': 'application/json',
       }
     });
+
+    // Adicionar interceptor para melhor tratamento de erros
+    this.axiosInstance.interceptors.response.use(
+      response => response,
+      error => {
+        if (axios.isAxiosError(error)) {
+          if (!error.response) {
+            throw new Error('Servidor não está respondendo. Verifique se o servidor Python está rodando em http://localhost:8000');
+          }
+          const message = error.response.data?.error || error.response.data?.message || error.message;
+          throw new Error(`Erro na requisição: ${message}`);
+        }
+        throw error;
+      }
+    );
   }
 
   async startDubbing(request: DubbingRequest): Promise<DubbingResponse> {
     try {
-      // Primeiro, verifica se o servidor está online
+      // Verificar se o servidor está online antes de fazer a requisição
       await this.checkServerHealth();
       
       const response = await this.axiosInstance.post<DubbingResponse>(
@@ -43,16 +58,7 @@ export class DubbingService {
       return response.data;
     } catch (error) {
       console.error('Erro ao iniciar dublagem:', error);
-      if (axios.isAxiosError(error)) {
-        if (!error.response) {
-          throw new Error('Servidor não está respondendo. Verifique se o servidor backend está rodando em http://localhost:8000');
-        }
-        if (error.response.status === 404) {
-          throw new Error('API de dublagem não encontrada. Verifique se o servidor está configurado corretamente.');
-        }
-        throw new Error(`Erro ao iniciar dublagem: ${error.response.data?.message || error.message}`);
-      }
-      throw new Error('Erro inesperado ao iniciar dublagem');
+      throw new Error(error instanceof Error ? error.message : 'Erro ao iniciar processo de dublagem');
     }
   }
 
@@ -64,21 +70,15 @@ export class DubbingService {
       return response.data;
     } catch (error) {
       console.error('Erro ao verificar status:', error);
-      if (axios.isAxiosError(error)) {
-        if (!error.response) {
-          throw new Error('Servidor não está respondendo');
-        }
-        throw new Error(`Erro ao verificar status: ${error.response.data?.message || error.message}`);
-      }
-      throw new Error('Erro inesperado ao verificar status');
+      throw new Error(error instanceof Error ? error.message : 'Erro ao verificar status da dublagem');
     }
   }
 
   private async checkServerHealth(): Promise<void> {
     try {
-      await this.axiosInstance.get('/health', { timeout: 5000 });
+      await this.axiosInstance.get('/health');
     } catch (error) {
-      throw new Error('Servidor de dublagem não está acessível. Verifique se o servidor backend está rodando.');
+      throw new Error('Servidor de dublagem não está acessível. Certifique-se que o servidor Python está rodando com o comando: python backend/main.py');
     }
   }
 }
