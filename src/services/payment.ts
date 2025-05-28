@@ -1,5 +1,6 @@
 import { loadStripe } from '@stripe/stripe-js';
 import { supabase } from '../lib/supabase';
+import { STRIPE_PRODUCTS } from '../stripe-config';
 
 class PaymentService {
   private static instance: PaymentService;
@@ -8,7 +9,7 @@ class PaymentService {
   private constructor() {
     const stripeKey = import.meta.env.VITE_STRIPE_PUBLIC_KEY;
     if (!stripeKey) {
-      throw new Error('Chave pública do Stripe não encontrada no arquivo .env');
+      throw new Error('Chave pública do Stripe não encontrada');
     }
     this.stripe = loadStripe(stripeKey);
   }
@@ -28,19 +29,17 @@ class PaymentService {
         throw new Error('Email do usuário não encontrado');
       }
 
-      // Construct the correct Edge Function URL
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`;
-
-      const response = await fetch(functionUrl, {
+      const response = await fetch('/api/stripe/create-checkout-session', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({
-          userId,
-          email: user.email,
-          returnUrl: `${import.meta.env.VITE_APP_URL || window.location.origin}`
+          price_id: STRIPE_PRODUCTS.MONTHLY_PLAN.priceId,
+          success_url: `${window.location.origin}/success`,
+          cancel_url: `${window.location.origin}/cancel`,
+          mode: 'subscription'
         })
       });
 
@@ -49,49 +48,11 @@ class PaymentService {
         throw new Error(error.message || 'Erro ao criar sessão de checkout');
       }
 
-      const { sessionId } = await response.json();
-
-      if (!sessionId) {
-        throw new Error('ID da sessão não retornado');
-      }
-
-      const stripe = await this.stripe;
-      if (!stripe) {
-        throw new Error('Erro ao inicializar Stripe');
-      }
-
-      const { error: stripeError } = await stripe.redirectToCheckout({
-        sessionId
-      });
-
-      if (stripeError) {
-        throw stripeError;
-      }
+      const { url } = await response.json();
+      window.location.href = url;
     } catch (error) {
       console.error('Erro no processo de assinatura:', error);
       throw new Error(`Erro ao processar pagamento: ${error.message}`);
-    }
-  }
-
-  async handleSubscriptionSuccess(sessionId: string): Promise<void> {
-    try {
-      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-subscription-success`;
-
-      const response = await fetch(functionUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
-        },
-        body: JSON.stringify({ sessionId })
-      });
-
-      if (!response.ok) {
-        throw new Error('Erro ao processar sucesso da assinatura');
-      }
-    } catch (error) {
-      console.error('Erro ao processar callback do Stripe:', error);
-      throw error;
     }
   }
 }
