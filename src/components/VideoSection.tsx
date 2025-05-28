@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import VideoInput from './VideoInput';
 import VideoPlayer from './VideoPlayer';
 import DubbingControls from './DubbingControls';
-import SignupModal from './SignupModal';
-import LoginModal from './LoginModal';
-import SubscriptionModal from './SubscriptionModal';
 import { VideoLinkData, VoiceOption } from '../types';
-import { authService } from '../services/auth';
-import { paymentService } from '../services/payment';
 import { DubbingService } from '../services/dubbing';
 
 const dubbingService = new DubbingService();
@@ -23,9 +18,6 @@ const VideoSection: React.FC = () => {
     language: 'pt-BR'
   });
   const [dubbedVideoUrl, setDubbedVideoUrl] = useState<string | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showSignupModal, setShowSignupModal] = useState(false);
-  const [showSubscriptionModal, setShowSubscriptionModal] = useState(false);
   const [currentTaskId, setCurrentTaskId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -37,20 +29,12 @@ const VideoSection: React.FC = () => {
 
   const handleStartDubbing = async () => {
     if (!videoData) return;
-
-    const user = await authService.getCurrentUser();
-    
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
     
     setIsDubbing(true);
     setDubbingProgress(0);
     setError(null);
     
     try {
-      // Iniciar processo de dublagem
       const response = await dubbingService.startDubbing({
         url: videoData.url,
         target_language: selectedVoice.language,
@@ -61,7 +45,6 @@ const VideoSection: React.FC = () => {
 
       setCurrentTaskId(response.task_id);
 
-      // Iniciar polling do status
       const pollInterval = setInterval(async () => {
         try {
           const status = await dubbingService.checkStatus(response.task_id);
@@ -89,57 +72,6 @@ const VideoSection: React.FC = () => {
       setError('Erro ao iniciar processo de dublagem');
     }
   };
-
-  const handleSignup = async (email: string, password: string) => {
-    try {
-      await authService.signup(email, password);
-      setShowSignupModal(false);
-      handleStartDubbing();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleLogin = async (email: string, password: string) => {
-    try {
-      await authService.login(email, password);
-      setShowLoginModal(false);
-      handleStartDubbing();
-    } catch (error) {
-      throw error;
-    }
-  };
-
-  const handleSubscribe = async () => {
-    try {
-      const user = await authService.getCurrentUser();
-      if (user) {
-        await paymentService.startSubscription(user.id);
-        setShowSubscriptionModal(false);
-      }
-    } catch (error) {
-      console.error('Erro ao iniciar assinatura:', error);
-    }
-  };
-
-  const switchToLogin = () => {
-    setShowSignupModal(false);
-    setShowLoginModal(true);
-  };
-
-  const switchToSignup = () => {
-    setShowLoginModal(false);
-    setShowSignupModal(true);
-  };
-
-  // Limpar intervalos ao desmontar
-  useEffect(() => {
-    return () => {
-      if (currentTaskId) {
-        // Aqui você pode implementar uma lógica para cancelar a tarefa no backend se necessário
-      }
-    };
-  }, [currentTaskId]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -183,7 +115,6 @@ const VideoSection: React.FC = () => {
         )}
       </motion.div>
       
-      {/* Recent history section - would be populated in a real app */}
       {videoData && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -197,26 +128,6 @@ const VideoSection: React.FC = () => {
           </div>
         </motion.div>
       )}
-
-      <SignupModal
-        isOpen={showSignupModal}
-        onClose={() => setShowSignupModal(false)}
-        onSubmit={handleSignup}
-        onSwitchToLogin={switchToLogin}
-      />
-
-      <LoginModal
-        isOpen={showLoginModal}
-        onClose={() => setShowLoginModal(false)}
-        onLogin={handleLogin}
-        onSwitchToSignup={switchToSignup}
-      />
-
-      <SubscriptionModal
-        isOpen={showSubscriptionModal}
-        onClose={() => setShowSubscriptionModal(false)}
-        onSubscribe={handleSubscribe}
-      />
     </div>
   );
 };
