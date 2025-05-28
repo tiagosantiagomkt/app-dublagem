@@ -28,17 +28,23 @@ class PaymentService {
         throw new Error('Email do usuário não encontrado');
       }
 
-      // Criar sessão de checkout diretamente usando a API do Stripe
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`, {
+      // Construct the correct Edge Function URL
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`;
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          // Add CORS headers
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         },
         body: JSON.stringify({
           userId,
           email: user.email,
-          returnUrl: window.location.origin
+          returnUrl: `${import.meta.env.VITE_APP_URL || window.location.origin}`
         })
       });
 
@@ -73,11 +79,17 @@ class PaymentService {
 
   async handleSubscriptionSuccess(sessionId: string): Promise<void> {
     try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-subscription-success`, {
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/handle-subscription-success`;
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+          // Add CORS headers
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'POST, OPTIONS',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
         },
         body: JSON.stringify({ sessionId })
       });
