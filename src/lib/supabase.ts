@@ -12,5 +12,21 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true
+  },
+  global: {
+    headers: {
+      'X-Client-Info': 'supabase-js/2.x',
+    },
+  },
+});
+
+// Verificar conexão
+supabase.auth.onAuthStateChange((event, session) => {
+  if (event === 'SIGNED_IN') {
+    console.log('Usuário conectado com sucesso');
+  } else if (event === 'SIGNED_OUT') {
+    console.log('Usuário desconectado');
+  } else if (event === 'USER_UPDATED') {
+    console.log('Dados do usuário atualizados');
   }
 });

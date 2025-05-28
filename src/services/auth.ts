@@ -50,8 +50,8 @@ class AuthService {
       return {
         id: profile.id,
         email: profile.email,
-        freeTrialUsed: false,
-        isSubscribed: false
+        freeTrialUsed: profile.free_trial_used || false,
+        isSubscribed: profile.is_subscribed || false
       };
     } catch (error) {
       console.error('Erro ao processar login:', error);
@@ -65,7 +65,10 @@ class AuthService {
         email,
         password,
         options: {
-          emailRedirectTo: window.location.origin
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+          data: {
+            email: email
+          }
         }
       });
 
@@ -88,15 +91,17 @@ class AuthService {
             free_trial_used: false,
             is_subscribed: false
           }
-        ]);
+        ])
+        .select()
+        .single();
 
       if (profileError) {
         console.error('Erro ao criar perfil:', profileError);
         throw new Error('Erro ao criar perfil do usuário');
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Erro no processo de cadastro:', error);
-      throw error;
+      throw new Error(error.message || 'Erro durante o cadastro');
     }
   }
 
@@ -121,8 +126,8 @@ class AuthService {
       return {
         id: profile.id,
         email: profile.email,
-        freeTrialUsed: false,
-        isSubscribed: false
+        freeTrialUsed: profile.free_trial_used || false,
+        isSubscribed: profile.is_subscribed || false
       };
     } catch (error) {
       console.error('Erro ao buscar usuário atual:', error);
