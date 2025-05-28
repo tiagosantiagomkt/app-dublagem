@@ -35,11 +35,7 @@ class PaymentService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          // Add CORS headers
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({
           userId,
@@ -85,11 +81,7 @@ class PaymentService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-          // Add CORS headers
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Methods': 'POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization'
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`
         },
         body: JSON.stringify({ sessionId })
       });
