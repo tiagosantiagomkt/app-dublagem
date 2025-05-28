@@ -9,7 +9,8 @@ export default defineConfig({
   },
   server: {
     port: 5174,
-    strictPort: true
+    strictPort: true,
+    https: false // Explicitly disable HTTPS for local development
   },
   envDir: '.'
 });
