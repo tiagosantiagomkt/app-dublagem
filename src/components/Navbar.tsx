@@ -20,12 +20,12 @@ const Navbar: React.FC = () => {
   const checkUser = async () => {
     try {
       const currentUser = await authService.getCurrentUser();
-        setUser(currentUser);
+      setUser(currentUser);
     } catch (error) {
       console.error('Erro ao verificar usuário:', error);
     } finally {
       setIsLoading(false);
-      }
+    }
   };
 
   const handleLogin = async (email: string, password: string) => {
@@ -42,7 +42,6 @@ const Navbar: React.FC = () => {
     try {
       await authService.signup(email, password);
       setShowSignupModal(false);
-      // Mostrar mensagem de sucesso e pedir para verificar email
       alert('Cadastro realizado com sucesso! Por favor, verifique seu email para confirmar sua conta.');
     } catch (error) {
       throw error;
@@ -69,7 +68,7 @@ const Navbar: React.FC = () => {
   };
 
   if (isLoading) {
-    return null; // ou um componente de loading
+    return null;
   }
 
   return (
@@ -89,19 +88,9 @@ const Navbar: React.FC = () => {
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
                   <span className="text-sm text-gray-600">{user.email}</span>
-                  {user.isSubscribed ? (
-                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Assinante
-                    </span>
-                  ) : user.freeTrialUsed ? (
-                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Período gratuito usado
-                    </span>
-                  ) : (
-                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
-                      Período gratuito
-                    </span>
-                  )}
+                  <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded">
+                    Acesso Gratuito
+                  </span>
                 </div>
                 <button
                   onClick={handleLogout}
@@ -155,19 +144,9 @@ const Navbar: React.FC = () => {
                 <div className="space-y-4">
                   <div className="flex flex-col space-y-2">
                     <span className="text-sm text-gray-600">{user.email}</span>
-                    {user.isSubscribed ? (
-                      <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded inline-block w-fit">
-                        Assinante
-                      </span>
-                    ) : user.freeTrialUsed ? (
-                      <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded inline-block w-fit">
-                        Período gratuito usado
-                      </span>
-                    ) : (
-                      <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded inline-block w-fit">
-                        Período gratuito
-                      </span>
-                    )}
+                    <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded inline-block w-fit">
+                      Acesso Gratuito
+                    </span>
                   </div>
                   <button
                     onClick={() => {

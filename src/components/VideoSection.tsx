@@ -44,21 +44,12 @@ const VideoSection: React.FC = () => {
       setShowLoginModal(true);
       return;
     }
-
-    if (user.freeTrialUsed && !user.isSubscribed) {
-      setShowSubscriptionModal(true);
-      return;
-    }
     
     setIsDubbing(true);
     setDubbingProgress(0);
     setError(null);
     
     try {
-      if (!user.freeTrialUsed) {
-        await authService.useFreeVideo(user.id);
-      }
-
       // Iniciar processo de dublagem
       const response = await dubbingService.startDubbing({
         url: videoData.url,
@@ -80,10 +71,6 @@ const VideoSection: React.FC = () => {
             clearInterval(pollInterval);
             setIsDubbing(false);
             setDubbedVideoUrl(status.output_url);
-            
-            if (!user.isSubscribed) {
-              setShowSubscriptionModal(true);
-            }
           } else if (status.status === 'failed') {
             clearInterval(pollInterval);
             setIsDubbing(false);
