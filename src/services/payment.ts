@@ -29,17 +29,19 @@ class PaymentService {
         throw new Error('Email do usuário não encontrado');
       }
 
-      const response = await fetch('/api/stripe/create-checkout-session', {
+      // Construct the correct Edge Function URL
+      const functionUrl = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-checkout-session`;
+
+      const response = await fetch(functionUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${(await supabase.auth.getSession()).data.session?.access_token}`
         },
         body: JSON.stringify({
-          price_id: STRIPE_PRODUCTS.MONTHLY_PLAN.priceId,
-          success_url: `${window.location.origin}/success`,
-          cancel_url: `${window.location.origin}/cancel`,
-          mode: 'subscription'
+          userId,
+          email: user.email,
+          returnUrl: window.location.origin
         })
       });
 
@@ -49,10 +51,14 @@ class PaymentService {
       }
 
       const { url } = await response.json();
+      if (!url) {
+        throw new Error('URL de checkout não retornada');
+      }
+
       window.location.href = url;
     } catch (error) {
       console.error('Erro no processo de assinatura:', error);
-      throw new Error(`Erro ao processar pagamento: ${error.message}`);
+      throw error;
     }
   }
 }
